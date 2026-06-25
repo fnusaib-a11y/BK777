@@ -7,6 +7,7 @@ import {
   TaskCategory, 
   WithdrawalRequest 
 } from '../types';
+import bkLogo from '../assets/images/bk777_logo_1782280626027.jpg';
 import { 
   Home, 
   ListTodo, 
@@ -36,7 +37,8 @@ import {
   Lock,
   LogIn,
   UserPlus,
-  LayoutDashboard
+  LayoutDashboard,
+  Globe
 } from 'lucide-react';
 import AdminPanel from './AdminPanel';
 
@@ -574,10 +576,45 @@ export default function MobileSimulator({
 
         {/* Global Banner advertisement placement based on Admin Configurations */}
         {adSetting.isEnabled && adSetting.placementLimits.homeBanner && activeTab === 'home' && !selectedTask && !showBrowser && (
-          <div className="bg-[#e9ecef] border-b border-gray-200 text-slate-400 text-[10px] font-bold py-1.5 px-3 flex justify-between items-center text-center tracking-normal">
-            <span className="bg-indigo-600 text-white text-[8px] font-bold py-0.5 px-1 rounded select-none uppercase">Sponsor AD</span>
-            <span className="font-sans text-slate-600">Earn coins fast with premium partners</span>
-            <X className="w-3 h-3 hover:text-slate-600 cursor-pointer text-slate-400" />
+          <div 
+            onClick={() => {
+              if (adSetting.provider === 'adsterra' && adSetting.adsterraDirectLink) {
+                window.open(adSetting.adsterraDirectLink, '_blank');
+                addLog('User clicked Adsterra Banner: Direct Link opened.');
+              } else if (adSetting.provider === 'monetag' && adSetting.monetagDirectLink) {
+                window.open(adSetting.monetagDirectLink, '_blank');
+                addLog('User clicked Monetag Banner: Smartlink opened.');
+              } else if (adSetting.provider === 'startio') {
+                addLog('User clicked Start.io Banner Ad.');
+              }
+            }}
+            className={`border-b text-[10px] font-bold py-2 px-3 flex justify-between items-center text-center cursor-pointer transition-all ${
+              adSetting.provider === 'startio' 
+                ? 'bg-amber-500/10 border-amber-500/20 text-slate-800 hover:bg-amber-500/15' 
+                : adSetting.provider === 'adsterra' 
+                ? 'bg-blue-600/10 border-blue-600/20 text-slate-800 hover:bg-blue-600/15'
+                : 'bg-rose-500/10 border-rose-500/20 text-slate-800 hover:bg-rose-500/15'
+            }`}
+          >
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              <span className={`text-[8px] font-extrabold py-0.5 px-1 rounded select-none uppercase text-white ${
+                adSetting.provider === 'startio' 
+                  ? 'bg-amber-600' 
+                  : adSetting.provider === 'adsterra' 
+                  ? 'bg-blue-600'
+                  : 'bg-rose-600'
+              }`}>
+                {adSetting.provider === 'startio' ? 'Start.io Ad' : adSetting.provider === 'adsterra' ? 'Adsterra Ad' : 'Monetag Ad'}
+              </span>
+              <span className="font-sans text-slate-700 truncate max-w-[200px]">
+                {adSetting.provider === 'startio' 
+                  ? `Start.io App ID: ${adSetting.startioAppId || adSetting.appId}` 
+                  : adSetting.provider === 'adsterra' 
+                  ? `Adsterra Direct Offer Active` 
+                  : `Monetag Placement Zone: ${adSetting.monetagZoneId || adSetting.appId}`}
+              </span>
+            </div>
+            <span className="text-[9px] underline text-indigo-600 font-bold">Visit</span>
           </div>
         )}
 
@@ -662,10 +699,10 @@ export default function MobileSimulator({
 
         {/* Ad Network Overlay (Pop up / Interstitial / Video Ad Interceptor) */}
         {adOverlayActive && (
-          <div className="absolute inset-0 bg-black/95 z-55 flex flex-col items-center justify-center p-6 text-center text-white animate-fadeIn">
+          <div className="absolute inset-0 bg-slate-950/95 z-55 flex flex-col items-center justify-center p-6 text-center text-white animate-fadeIn">
             <div className="absolute top-6 right-6 flex items-center gap-2">
-              <span className="text-[11px] text-gray-400 font-mono">
-                {adOverlayCountdown > 0 ? `Skip in ${adOverlayCountdown}s` : 'You can close now'}
+              <span className="text-[10px] text-slate-400 font-mono bg-slate-900 px-2 py-1 rounded">
+                {adOverlayCountdown > 0 ? `Ad plays for ${adOverlayCountdown}s` : 'Ad completed • Ready to claim'}
               </span>
               <button
                 id="close-ad-overlay"
@@ -677,33 +714,119 @@ export default function MobileSimulator({
               </button>
             </div>
 
-            <div className="space-y-4 max-w-sm">
-              <span className="bg-indigo-600 text-white font-bold text-[9px] py-1 px-2 rounded uppercase tracking-wider">
-                {adSetting.provider.toUpperCase()} Ad Sponsored
-              </span>
-              <div className="w-full aspect-video border border-slate-800 rounded bg-slate-900 overflow-hidden shadow flex items-center justify-center relative">
-                <Play className="w-12 h-12 text-slate-700 animate-ping absolute" />
-                <img 
-                  src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&auto=format&fit=crop&q=60" 
-                  className="w-full h-full object-cover opacity-80" 
-                  alt="sponsored promo banner" 
-                  referrerPolicy="no-referrer"
-                />
+            <div className="space-y-5 max-w-xs w-full bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-2xl">
+              
+              {/* Provider Badge and logo headers */}
+              <div className="flex flex-col items-center space-y-1.5 pb-2 border-b border-slate-800/80">
+                <span className={`text-[9px] font-extrabold py-0.5 px-2 rounded uppercase tracking-wider text-white ${
+                  adSetting.provider === 'startio' 
+                    ? 'bg-amber-500' 
+                    : adSetting.provider === 'adsterra' 
+                    ? 'bg-blue-600'
+                    : 'bg-rose-600'
+                }`}>
+                  {adSetting.provider === 'startio' ? 'Start.io Ad SDK' : adSetting.provider === 'adsterra' ? 'Adsterra Direct' : 'Monetag Smartlink'}
+                </span>
+                
+                <h4 className="text-xs font-bold text-slate-400 font-mono tracking-tight">
+                  {adSetting.provider === 'startio' 
+                    ? `App ID: ${adSetting.startioAppId || adSetting.appId}` 
+                    : adSetting.provider === 'adsterra' 
+                    ? `Zone: Adsterra Direct Link` 
+                    : `Zone ID: ${adSetting.monetagZoneId || adSetting.appId}`}
+                </h4>
               </div>
-              <div>
-                <h4 className="font-bold text-slate-100 text-sm font-sans line-clamp-1">Install Rise of Kingdoms</h4>
-                <p className="text-xs text-slate-400 mt-1 line-clamp-2">The highest-grossing RPG available right now. Click downstream link to claim 120 extra free coins.</p>
-              </div>
-              <button className="bg-amber-500 text-slate-950 font-bold p-2 px-6 rounded-lg text-xs tracking-wider animate-pulse self-center">
-                INSTALL CAMPAIGN
-              </button>
+
+              {/* Start.io Visual Content */}
+              {adSetting.provider === 'startio' && (
+                <div className="space-y-4">
+                  <div className="w-full aspect-video border border-amber-500/20 rounded bg-slate-950 overflow-hidden shadow flex flex-col items-center justify-center relative p-2">
+                    <Coins className="w-10 h-10 text-amber-500 animate-bounce mb-2" />
+                    <p className="text-[11px] font-mono text-amber-400">START.IO INTERSTITIAL AD</p>
+                    <p className="text-[9px] text-slate-500 mt-0.5">Placement: {adSetting.startioInterstitialId || adSetting.interstitialId}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-100 text-sm font-sans truncate">Install StartEarning App</h5>
+                    <p className="text-[11px] text-slate-400 mt-1 leading-normal">
+                      Monetize your userbase instantly with high-yielding SDK banners. Safe, fast integration in minutes.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      addLog('Simulated Start.io Sponsor install action registered.');
+                      triggerAlert('Sponsor redirect loaded! Enjoy your premium bonus.');
+                    }}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-2 px-4 rounded-xl text-xs tracking-wider transition-all shadow"
+                  >
+                    INSTALL APPS & BONUS COINS
+                  </button>
+                </div>
+              )}
+
+              {/* Adsterra Visual Content */}
+              {adSetting.provider === 'adsterra' && (
+                <div className="space-y-4">
+                  <div className="w-full aspect-video border border-blue-500/20 rounded bg-slate-950 overflow-hidden shadow flex flex-col items-center justify-center relative p-2">
+                    <Globe className="w-10 h-10 text-blue-500 animate-pulse mb-2" />
+                    <p className="text-[11px] font-mono text-blue-400">ADSTERRA HIGH CPM DIRECT LINK</p>
+                    <p className="text-[8px] text-slate-500 mt-0.5 max-w-[200px] truncate">{adSetting.adsterraDirectLink}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-100 text-sm font-sans truncate">High Paying Sponsor Offer</h5>
+                    <p className="text-[11px] text-slate-400 mt-1 leading-normal">
+                      Claim free gift cards, coin packages and premium vouchers from verified online sponsor networks.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (adSetting.adsterraDirectLink) {
+                        window.open(adSetting.adsterraDirectLink, '_blank');
+                      }
+                      addLog('Opened Adsterra Direct Link offer in background.');
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs tracking-wider transition-all shadow"
+                  >
+                    VISIT ADSTERRA OFFER
+                  </button>
+                </div>
+              )}
+
+              {/* Monetag Visual Content */}
+              {adSetting.provider === 'monetag' && (
+                <div className="space-y-4">
+                  <div className="w-full aspect-video border border-rose-500/20 rounded bg-slate-950 overflow-hidden shadow flex flex-col items-center justify-center relative p-2">
+                    <Sparkles className="w-10 h-10 text-rose-500 animate-pulse mb-2" />
+                    <p className="text-[11px] font-mono text-rose-400">MONETAG POPUNDER AD UNIT</p>
+                    <p className="text-[9px] text-slate-500 mt-0.5">Active Tag Zone: {adSetting.monetagZoneId || adSetting.appId}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-100 text-sm font-sans truncate">Monetag Earning Boost</h5>
+                    <p className="text-[11px] text-slate-400 mt-1 leading-normal">
+                      Experience non-intrusive high CPM Popunder and Push Notification ad deliveries.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (adSetting.monetagDirectLink) {
+                        window.open(adSetting.monetagDirectLink, '_blank');
+                      }
+                      addLog('Opened Monetag Popunder direct smartlink.');
+                    }}
+                    className="w-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs tracking-wider transition-all shadow"
+                  >
+                    LAUNCH MONETAG CAMPAIGN
+                  </button>
+                </div>
+              )}
+
+              <p className="text-[9px] text-slate-500 italic">Configure these credentials inside Admin Configurations Panel.</p>
             </div>
           </div>
         )}
 
         {/* IF USER IS NOT LOGGED IN -> RENDER AUTHENTICATION FLOW PORTALS */}
         {!isLoggedIn ? (
-          <div className="flex-1 flex flex-col overflow-y-auto relative min-h-full bg-[#0b121f]">
+          <div className="flex-1 flex flex-col overflow-y-auto relative min-h-full bg-[#090d16]">
             {/* WELCOME / GREETING SCREEN */}
             {authScreen === 'welcome' && (
               <motion.div 
@@ -712,18 +835,25 @@ export default function MobileSimulator({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col justify-between p-6 pt-16 pb-8 bg-[#0b121f] text-white text-center"
+                className="flex-1 flex flex-col justify-between p-6 pt-16 pb-8 bg-[#090d16] text-white text-center relative overflow-hidden"
               >
-                <div className="w-full flex-1 flex flex-col justify-center items-center max-w-sm mx-auto">
+                {/* Background glow animations */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                  <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-[#1668c7]/20 blur-[80px] bg-animate-glow-1"></div>
+                  <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-[#dfba73]/20 blur-[80px] bg-animate-glow-2"></div>
+                  <div className="absolute top-1/2 left-1/4 w-40 h-40 rounded-full bg-indigo-600/15 blur-[60px] bg-animate-pulse"></div>
+                </div>
+
+                <div className="w-full flex-1 flex flex-col justify-center items-center max-w-sm mx-auto relative z-10">
                   {/* High fidelity BK777 Logo Container */}
                   <motion.div 
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.1, duration: 0.4 }}
-                    className="w-48 h-48 rounded-2xl overflow-hidden border border-slate-800 shadow-[0_0_30px_rgba(223,186,115,0.15)] bg-[#090d16] flex items-center justify-center p-0.5 relative group"
+                    className="w-48 h-48 rounded-2xl overflow-hidden border border-[#dfba73]/30 shadow-[0_0_35px_rgba(223,186,115,0.25)] bg-[#090d16] flex items-center justify-center p-0.5 relative group"
                   >
                     <img
-                      src="/src/assets/images/bk777_logo_1782280626027.jpg"
+                      src={bkLogo}
                       alt="BK777 Logo"
                       className="w-full h-full object-cover rounded-2xl"
                       referrerPolicy="no-referrer"
@@ -731,7 +861,7 @@ export default function MobileSimulator({
                   </motion.div>
 
                   {/* Are you new to BK777...? Text */}
-                  <h3 className="text-slate-200 text-[15px] font-bold tracking-tight mt-12 mb-4">
+                  <h3 className="text-[#f1f5f9] text-[16px] font-extrabold tracking-wide mt-12 mb-4 drop-shadow">
                     Are you new to BK777...?
                   </h3>
 
@@ -745,14 +875,14 @@ export default function MobileSimulator({
                     whileTap={{ scale: 0.95 }}
                     animate={{
                       boxShadow: [
-                        "0 4px 15px rgba(223, 186, 115, 0.15)",
-                        "0 4px 25px rgba(223, 186, 115, 0.35)",
-                        "0 4px 15px rgba(223, 186, 115, 0.15)"
+                        "0 4px 20px rgba(223, 186, 115, 0.2)",
+                        "0 4px 35px rgba(223, 186, 115, 0.55)",
+                        "0 4px 20px rgba(223, 186, 115, 0.2)"
                       ]
                     }}
                     transition={{
                       boxShadow: {
-                        duration: 2,
+                        duration: 2.5,
                         repeat: Infinity,
                         ease: "easeInOut"
                       },
@@ -761,13 +891,13 @@ export default function MobileSimulator({
                     style={{
                       background: 'linear-gradient(105deg, #dfba73 0%, #c59f59 45%, #0c4c92 45%, #1668c7 100%)'
                     }}
-                    className="w-full max-w-[280px] py-3 rounded-full text-white font-extrabold text-[17px] tracking-wide border border-[#9b7b3d] shadow-lg cursor-pointer flex items-center justify-center select-none"
+                    className="w-full max-w-[280px] py-3 rounded-full text-white font-black text-[18px] tracking-wider border border-[#dfba73]/70 shadow-2xl cursor-pointer flex items-center justify-center select-none"
                   >
                     Sign Up
                   </motion.button>
 
                   {/* Do you already have an account? Text */}
-                  <h3 className="text-slate-200 text-[14px] font-bold tracking-tight mt-12 mb-4">
+                  <h3 className="text-[#f1f5f9] text-[15px] font-extrabold tracking-wide mt-12 mb-4 drop-shadow">
                     Do you already have an account?
                   </h3>
 
@@ -777,18 +907,18 @@ export default function MobileSimulator({
                       setAuthError('');
                       setAuthScreen('regular_login');
                     }}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    whileHover={{ scale: 1.15, rotate: 8 }}
                     whileTap={{ scale: 0.9 }}
                     animate={{
                       boxShadow: [
-                        "0 4px 12px rgba(13, 76, 146, 0.2)",
-                        "0 4px 22px rgba(13, 76, 146, 0.4)",
-                        "0 4px 12px rgba(13, 76, 146, 0.2)"
+                        "0 4px 15px rgba(13, 76, 146, 0.25)",
+                        "0 4px 30px rgba(13, 76, 146, 0.55)",
+                        "0 4px 15px rgba(13, 76, 146, 0.25)"
                       ]
                     }}
                     transition={{
                       boxShadow: {
-                        duration: 2,
+                        duration: 2.5,
                         repeat: Infinity,
                         ease: "easeInOut",
                         delay: 0.5
@@ -798,13 +928,13 @@ export default function MobileSimulator({
                     style={{
                       background: 'linear-gradient(105deg, #dfba73 0%, #c59f59 45%, #0c4c92 45%, #1668c7 100%)'
                     }}
-                    className="w-14 h-14 rounded-full border border-[#9b7b3d] flex items-center justify-center font-extrabold text-white text-xs shadow-md cursor-pointer select-none"
+                    className="w-16 h-16 rounded-full border border-[#dfba73]/70 flex items-center justify-center font-black text-white text-[13px] shadow-2xl cursor-pointer select-none"
                   >
                     Login
                   </motion.button>
                 </div>
 
-                <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-12">
+                <div className="text-[11px] text-slate-500 uppercase tracking-widest mt-12 relative z-10 font-bold">
                   POWERED BY BK777 ECOSYSTEM
                 </div>
               </motion.div>
@@ -818,47 +948,53 @@ export default function MobileSimulator({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col justify-between bg-[#ffffff] p-6 pt-16 pb-8 relative text-[#1c1e21]"
+                className="flex-1 flex flex-col justify-between bg-[#f0f2f5] p-6 pt-16 pb-8 relative text-[#1c1e21] overflow-hidden"
               >
+                {/* Facebook themed subtle background glows */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-70">
+                  <div className="absolute -top-12 -left-12 w-64 h-64 rounded-full bg-[#1877f2]/10 blur-[80px] bg-animate-glow-1"></div>
+                  <div className="absolute -bottom-12 -right-12 w-64 h-64 rounded-full bg-sky-300/30 blur-[80px] bg-animate-glow-2"></div>
+                </div>
+
                 {/* Back Arrow button */}
                 <button 
                   onClick={() => setAuthScreen('welcome')} 
-                  className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 cursor-pointer p-1.5 rounded-full hover:bg-gray-100 transition duration-150"
+                  className="absolute top-4 left-4 text-gray-500 hover:text-gray-800 cursor-pointer p-1.5 rounded-full hover:bg-gray-200 transition duration-150 z-20"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
 
-                <div className="w-full flex-1 flex flex-col justify-center max-w-sm mx-auto">
+                <div className="w-full flex-1 flex flex-col justify-center max-w-sm mx-auto relative z-10">
                   {/* Perfect Facebook Blue Circle Icon */}
-                  <div className="flex justify-center mb-4 mt-4">
-                    <svg className="w-16 h-16 select-none filter drop-shadow-sm" viewBox="0 0 36 36" fill="none">
+                  <div className="flex justify-center mb-5 mt-4">
+                    <svg className="w-20 h-20 select-none filter drop-shadow-md" viewBox="0 0 36 36" fill="none">
                       <circle cx="18" cy="18" r="18" fill="#1877f2"/>
                       <path d="M22.5 18H20.25V27H16.875V18H15.1875V15.1875H16.875V13.5C16.875 11.25 17.8125 10.125 20.25 10.125C21.375 10.125 22.125 10.2188 22.125 10.2188L21.9375 13.0312H20.25C19.125 13.0312 18.8438 13.5 18.8438 14.25V15.1875H22.125L22.5 18Z" fill="white"/>
                     </svg>
                   </div>
 
                   {/* Header text from the 2nd picture */}
-                  <h2 className="text-[21px] font-bold text-[#1c1e21] tracking-tight text-center leading-tight mb-8 font-sans max-w-[260px] mx-auto">
+                  <h2 className="text-[22px] font-extrabold text-[#1c1e21] tracking-tight text-center leading-snug mb-8 font-sans max-w-[280px] mx-auto">
                     LOGIN to facebook for two factor verify
                   </h2>
 
                   {/* Error Alert */}
                   {authError && (
-                    <div className="mb-4 bg-rose-50 border border-rose-200/60 text-rose-600 p-3.5 rounded-xl flex items-start gap-2 text-xs animate-shake">
-                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <div className="mb-4 bg-rose-50 border border-rose-200 text-rose-600 p-3.5 rounded-xl flex items-start gap-2 text-xs animate-shake shadow-sm">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                       <span className="font-semibold">{authError}</span>
                     </div>
                   )}
 
                   {/* Input Fields */}
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
                     <input
                       id="fb-phone-input"
                       type="text"
                       placeholder="Email or Phone"
                       value={authPhone}
                       onChange={(e) => setAuthPhone(e.target.value)}
-                      className="w-full text-sm px-4 py-3 border border-[#ccd0d5] rounded-xl bg-white text-[#1c1e21] placeholder-[#8d949e] focus:outline-none focus:border-[#1877f2] focus:ring-1 focus:ring-[#1877f2] transition duration-150 shadow-sm font-sans"
+                      className="w-full text-base px-4 py-3.5 border border-[#ccd0d5] rounded-xl bg-white text-[#1c1e21] placeholder-[#8d949e] focus:outline-none focus:border-[#1877f2] focus:ring-2 focus:ring-[#1877f2]/20 transition duration-150 shadow-inner font-sans"
                     />
 
                     <input
@@ -867,7 +1003,7 @@ export default function MobileSimulator({
                       placeholder="Password"
                       value={authPassword}
                       onChange={(e) => setAuthPassword(e.target.value)}
-                      className="w-full text-sm px-4 py-3 border border-[#ccd0d5] rounded-xl bg-white text-[#1c1e21] placeholder-[#8d949e] focus:outline-none focus:border-[#1877f2] focus:ring-1 focus:ring-[#1877f2] transition duration-150 shadow-sm font-sans"
+                      className="w-full text-base px-4 py-3.5 border border-[#ccd0d5] rounded-xl bg-white text-[#1c1e21] placeholder-[#8d949e] focus:outline-none focus:border-[#1877f2] focus:ring-2 focus:ring-[#1877f2]/20 transition duration-150 shadow-inner font-sans"
                     />
 
                     {/* Sign Up Action Button */}
@@ -875,7 +1011,7 @@ export default function MobileSimulator({
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleUserAuth('signup')}
-                      className="w-full bg-[#1877f2] hover:bg-[#166fe5] text-white font-bold py-3 rounded-2xl text-[15px] transition-all duration-150 shadow-md hover:shadow-lg text-center cursor-pointer font-sans mt-4"
+                      className="w-full bg-[#1877f2] hover:bg-[#166fe5] text-white font-extrabold py-3.5 rounded-2xl text-[16px] tracking-wide transition-all duration-150 shadow-md hover:shadow-lg text-center cursor-pointer font-sans mt-5"
                     >
                       Sign Up
                     </motion.button>
@@ -883,16 +1019,16 @@ export default function MobileSimulator({
                 </div>
 
                 {/* Footer branding from the 2nd picture */}
-                <div className="w-full flex flex-col items-center mt-12 pb-4">
-                  <div className="border-t border-gray-150 w-full mb-6"></div>
-                  <div className="flex items-center gap-1 text-[#1877f2] font-black tracking-wider text-xs uppercase select-none">
+                <div className="w-full flex flex-col items-center mt-12 pb-4 relative z-10">
+                  <div className="border-t border-[#ccd0d5] w-full mb-6"></div>
+                  <div className="flex items-center gap-1 text-[#1877f2] font-black tracking-widest text-xs uppercase select-none">
                     {/* Meta Infinity Icon */}
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#1877f2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 1 0 0-8c-2 0-4 1.33-6 4Z" />
                     </svg>
                     <span>META</span>
                   </div>
-                  <div className="text-[10px] text-gray-400 font-medium tracking-wide mt-1 text-center font-sans">
+                  <div className="text-[10px] text-gray-400 font-bold tracking-widest mt-1.5 text-center font-sans">
                     BK777 connected with META universe
                   </div>
                 </div>
@@ -907,28 +1043,35 @@ export default function MobileSimulator({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col justify-between bg-[#0b121f] p-6 pt-16 pb-8 relative text-white"
+                className="flex-1 flex flex-col justify-between bg-[#090d16] p-6 pt-16 pb-8 relative text-white overflow-hidden"
               >
+                {/* Background glow animations */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                  <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#1668c7]/20 blur-[80px] bg-animate-glow-1"></div>
+                  <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-[#dfba73]/20 blur-[80px] bg-animate-glow-2"></div>
+                  <div className="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-rose-600/15 blur-[60px] bg-animate-pulse"></div>
+                </div>
+
                 {/* Back Arrow button */}
                 <button 
                   onClick={() => setAuthScreen('welcome')} 
-                  className="absolute top-4 left-4 text-slate-400 hover:text-slate-200 cursor-pointer p-1.5 rounded-full hover:bg-slate-900 transition duration-150"
+                  className="absolute top-4 left-4 text-slate-400 hover:text-slate-200 cursor-pointer p-1.5 rounded-full hover:bg-slate-900 transition duration-150 z-20"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
 
-                <div className="w-full flex-1 flex flex-col justify-center max-w-sm mx-auto">
+                <div className="w-full flex-1 flex flex-col justify-center max-w-sm mx-auto relative z-10">
                   {/* BK777 Logo at the top of the form */}
-                  <div className="w-28 h-28 mx-auto rounded-2xl overflow-hidden border border-slate-800 shadow-[0_0_20px_rgba(223,186,115,0.1)] bg-[#090d16] flex items-center justify-center p-0.5 mb-8">
+                  <div className="w-28 h-28 mx-auto rounded-2xl overflow-hidden border border-[#dfba73]/30 shadow-[0_0_25px_rgba(223,186,115,0.2)] bg-[#090d16] flex items-center justify-center p-0.5 mb-8">
                     <img
-                      src="/src/assets/images/bk777_logo_1782280626027.jpg"
+                      src={bkLogo}
                       alt="BK777 Logo"
                       className="w-full h-full object-cover rounded-2xl"
                       referrerPolicy="no-referrer"
                     />
                   </div>
 
-                  <h2 className="text-[26px] font-black text-white text-center tracking-wider mb-8 font-sans">
+                  <h2 className="text-[28px] font-black text-white text-center tracking-widest mb-8 font-sans drop-shadow-md">
                     Login
                   </h2>
 
@@ -949,7 +1092,7 @@ export default function MobileSimulator({
                         placeholder="Email or Phone Number"
                         value={authPhone}
                         onChange={(e) => setAuthPhone(e.target.value)}
-                        className="w-full text-sm px-4 py-3.5 border border-slate-800 bg-[#121824] text-slate-100 placeholder-[#4a5568] rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 shadow-sm font-sans"
+                        className="w-full text-base px-4 py-3.5 border border-slate-800 bg-[#121824] text-slate-100 placeholder-slate-500 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition duration-150 shadow-inner font-sans"
                       />
                     </div>
 
@@ -960,7 +1103,7 @@ export default function MobileSimulator({
                         placeholder="Password"
                         value={authPassword}
                         onChange={(e) => setAuthPassword(e.target.value)}
-                        className="w-full text-sm px-4 pr-12 py-3.5 border border-slate-800 bg-[#121824] text-slate-100 placeholder-[#4a5568] rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 shadow-sm font-sans"
+                        className="w-full text-base px-4 pr-12 py-3.5 border border-slate-800 bg-[#121824] text-slate-100 placeholder-slate-500 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition duration-150 shadow-inner font-sans"
                       />
                       <button
                         type="button"
@@ -979,7 +1122,7 @@ export default function MobileSimulator({
                       style={{
                         background: 'linear-gradient(105deg, #dfba73 0%, #c59f59 45%, #0c4c92 45%, #1668c7 100%)'
                       }}
-                      className="w-full py-3.5 rounded-full text-white font-extrabold text-[16px] tracking-wide border border-[#9b7b3d] shadow-[0_4px_15px_rgba(13,76,146,0.25)] cursor-pointer flex items-center justify-center select-none mt-6"
+                      className="w-full py-3.5 rounded-full text-white font-extrabold text-[17px] tracking-widest border border-[#dfba73]/70 shadow-[0_4px_20px_rgba(13,76,146,0.35)] cursor-pointer flex items-center justify-center select-none mt-6"
                     >
                       Login
                     </motion.button>
@@ -987,13 +1130,13 @@ export default function MobileSimulator({
 
                   <button 
                     onClick={() => triggerAlert("Password recovery system: Please contact the administrator at rupshamediacenter@gmail.com to reset your security keys.")}
-                    className="text-slate-400 hover:text-slate-300 text-xs font-semibold text-center mt-6 block cursor-pointer hover:underline mx-auto"
+                    className="text-slate-400 hover:text-slate-200 text-sm font-semibold text-center mt-6 block cursor-pointer hover:underline mx-auto transition"
                   >
                     Forgot Password?
                   </button>
                 </div>
 
-                <div className="text-[10px] text-slate-600 uppercase tracking-widest mt-12 text-center">
+                <div className="text-[11px] text-slate-600 uppercase tracking-widest mt-12 text-center relative z-10 font-bold">
                   SECURE CRYPTO PROTECTION TUNNEL
                 </div>
               </motion.div>
@@ -1009,7 +1152,7 @@ export default function MobileSimulator({
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg overflow-hidden border border-amber-400/40 bg-slate-900 flex items-center justify-center shadow-sm">
                   <img
-                    src="/src/assets/images/bk777_logo_1782280626027.jpg"
+                    src={bkLogo}
                     alt="BK777 Logo"
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"

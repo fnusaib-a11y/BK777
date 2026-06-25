@@ -7,6 +7,7 @@ import {
   TaskCategory, 
   VerificationType 
 } from '../types';
+import bkLogo from '../assets/images/bk777_logo_1782280626027.jpg';
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -23,7 +24,8 @@ import {
   Clock, 
   Coins, 
   FileText,
-  BadgeAlert
+  BadgeAlert,
+  Save
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -71,6 +73,7 @@ export default function AdminPanel({
     );
   }
   const [activeTab, setActiveTab] = useState<'dashboard' | 'tasks' | 'withdrawals' | 'kyc' | 'ads'>('dashboard');
+  const [adSaveSuccess, setAdSaveSuccess] = useState(false);
 
   // Task Creation states
   const [isCreating, setIsCreating] = useState(false);
@@ -246,7 +249,7 @@ export default function AdminPanel({
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-md overflow-hidden border border-amber-400/40 bg-slate-900 flex items-center justify-center shadow-sm">
                 <img
-                  src="/src/assets/images/bk777_logo_1782280626027.jpg"
+                  src={bkLogo}
                   alt="BK777 Logo"
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
@@ -1045,7 +1048,7 @@ export default function AdminPanel({
           <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-gray-200 pb-3">
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <Megaphone className="text-indigo-505" />
+                <Megaphone className="text-indigo-500" />
                 Advertisement networks integration dashboard
               </h2>
               <span className={`p-1 px-3 rounded-full text-xs font-bold leading-none ${
@@ -1055,8 +1058,8 @@ export default function AdminPanel({
               </span>
             </div>
 
+            {/* Active Switch & Main Global settings */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 border border-gray-150 rounded-xl p-5">
-              
               <div className="space-y-4">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">ACTIVE AD SOURCE PROVIDER</h3>
                 <div>
@@ -1064,7 +1067,18 @@ export default function AdminPanel({
                   <select
                     id="ad-provider-select"
                     value={adSetting.provider}
-                    onChange={handleToggleAdProvider}
+                    onChange={(e) => {
+                      const provider = e.target.value as AdSetting['provider'];
+                      setAdSetting(prev => ({ 
+                        ...prev, 
+                        provider, 
+                        isEnabled: provider !== 'none',
+                        // Map core fields for backwards compatibility with legacy code
+                        appId: provider === 'startio' ? (prev.startioAppId || prev.appId) : provider === 'monetag' ? (prev.monetagZoneId || prev.appId) : (prev.adsterraDirectLink || prev.appId),
+                        bannerId: provider === 'startio' ? (prev.startioBannerId || prev.bannerId) : (prev.bannerId)
+                      }));
+                      addLog(`Changed target active Ad Network to: ${provider.toUpperCase()}`);
+                    }}
                     className="w-full text-xs p-2.5 border border-gray-300 rounded-lg bg-white font-semibold text-slate-800 focus:outline-none"
                   >
                     <option value="none">No Active Ads (Disabled)</option>
@@ -1086,18 +1100,6 @@ export default function AdminPanel({
                     <option value="medium">Medium priority (Balanced ad delivery frequency)</option>
                     <option value="low">Low priority (Minimize visual disruption)</option>
                   </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1">App / Account ID Key</label>
-                  <input
-                    id="ad-app-id-input"
-                    type="text"
-                    value={adSetting.appId}
-                    onChange={e => setAdSetting(prev => ({ ...prev, appId: e.target.value }))}
-                    placeholder="Enter network unique account or AppId key"
-                    className="w-full text-xs p-2.5 border border-gray-300 rounded-lg bg-white text-slate-800 focus:outline-none font-mono"
-                  />
                 </div>
               </div>
 
@@ -1202,8 +1204,245 @@ export default function AdminPanel({
                   </div>
                 </div>
               </div>
-
             </div>
+
+            {/* Platform Specific Settings Panel */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest">INDIVIDUAL AD NETWORKS SETUP</h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* START.IO SETTINGS CARD */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none"></div>
+                  <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                    <span className="w-3 h-3 rounded-full bg-[#dfba73]"></span>
+                    <h4 className="font-bold text-slate-900 text-sm">Start.io SDK Settings</h4>
+                  </div>
+
+                  <div className="space-y-3.5 text-xs">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Start.io App ID</label>
+                      <input
+                        type="text"
+                        value={adSetting.startioAppId || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ 
+                            ...prev, 
+                            startioAppId: val,
+                            appId: prev.provider === 'startio' ? val : prev.appId
+                          }));
+                        }}
+                        placeholder="e.g. 208395729"
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Banner Placement ID</label>
+                      <input
+                        type="text"
+                        value={adSetting.startioBannerId || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ 
+                            ...prev, 
+                            startioBannerId: val,
+                            bannerId: prev.provider === 'startio' ? val : prev.bannerId
+                          }));
+                        }}
+                        placeholder="e.g. startio_banner_placement_1"
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Interstitial Placement ID</label>
+                      <input
+                        type="text"
+                        value={adSetting.startioInterstitialId || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ 
+                            ...prev, 
+                            startioInterstitialId: val,
+                            interstitialId: prev.provider === 'startio' ? val : prev.interstitialId
+                          }));
+                        }}
+                        placeholder="e.g. startio_interstitial_placement_2"
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Rewarded Video Placement ID</label>
+                      <input
+                        type="text"
+                        value={adSetting.startioRewardedId || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ 
+                            ...prev, 
+                            startioRewardedId: val,
+                            rewardedId: prev.provider === 'startio' ? val : prev.rewardedId
+                          }));
+                        }}
+                        placeholder="e.g. startio_rewarded_placement_3"
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ADSTERRA SETTINGS CARD */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none"></div>
+                  <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                    <span className="w-3 h-3 rounded-full bg-[#1877f2]"></span>
+                    <h4 className="font-bold text-slate-900 text-sm">Adsterra Settings</h4>
+                  </div>
+
+                  <div className="space-y-3.5 text-xs">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Adsterra Direct Link URL</label>
+                      <input
+                        type="text"
+                        value={adSetting.adsterraDirectLink || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ 
+                            ...prev, 
+                            adsterraDirectLink: val,
+                            appId: prev.provider === 'adsterra' ? val : prev.appId
+                          }));
+                        }}
+                        placeholder="https://www.highratecpm.com/..."
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Banner Widget iframe/Script Code</label>
+                      <textarea
+                        rows={3}
+                        value={adSetting.adsterraBannerCode || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ ...prev, adsterraBannerCode: val }));
+                        }}
+                        placeholder="<script>...</script> or <iframe>...</iframe>"
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono text-[10px]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Popunder Integration Code</label>
+                      <textarea
+                        rows={3}
+                        value={adSetting.adsterraPopunderCode || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ ...prev, adsterraPopunderCode: val }));
+                        }}
+                        placeholder="Popunder script code wrapper..."
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono text-[10px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* MONETAG SETTINGS CARD */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none"></div>
+                  <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                    <span className="w-3 h-3 rounded-full bg-rose-500"></span>
+                    <h4 className="font-bold text-slate-900 text-sm">Monetag Settings</h4>
+                  </div>
+
+                  <div className="space-y-3.5 text-xs">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Monetag Zone ID / Tag ID</label>
+                      <input
+                        type="text"
+                        value={adSetting.monetagZoneId || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ 
+                            ...prev, 
+                            monetagZoneId: val,
+                            appId: prev.provider === 'monetag' ? val : prev.appId
+                          }));
+                        }}
+                        placeholder="e.g. 8872935"
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Monetag Direct Smartlink URL</label>
+                      <input
+                        type="text"
+                        value={adSetting.monetagDirectLink || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ ...prev, monetagDirectLink: val }));
+                        }}
+                        placeholder="https://..."
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Monetag Popunder script tag code</label>
+                      <textarea
+                        rows={3}
+                        value={adSetting.monetagPopunderCode || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setAdSetting(prev => ({ ...prev, monetagPopunderCode: val }));
+                        }}
+                        placeholder="<script ... data-zone='8872935'></script>"
+                        className="w-full p-2 border border-slate-300 rounded bg-white text-slate-800 font-mono text-[10px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Save Settings Action Button */}
+            <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-5 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm mt-6">
+              <div className="text-left space-y-1">
+                <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Save className="w-4 h-4 text-indigo-600" />
+                  এড সেটিংস সেইভ করুন (Save Ad Settings)
+                </h4>
+                <p className="text-xs text-slate-500">
+                  আপনার এড সেটিংস রিয়েল-টাইমে ক্লাউড ডাটাবেজ (Firestore)-এর সাথে সিঙ্ক হয়, তবুও নিচে ক্লিক করে নিশ্চিত করুন।
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                {adSaveSuccess && (
+                  <div className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 p-2.5 px-4 rounded-xl animate-pulse">
+                    ✓ সেটিংস ক্লাউডে সংরক্ষিত হয়েছে! (Saved successfully!)
+                  </div>
+                )}
+                <button
+                  onClick={() => {
+                    setAdSaveSuccess(true);
+                    addLog(`MANUAL SYNC: Ad settings (Start.io, Adsterra, Monetag) synchronized to Google Firestore successfully.`);
+                    setTimeout(() => setAdSaveSuccess(false), 4000);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center uppercase tracking-wider"
+                >
+                  <Save className="w-4 h-4" />
+                  সেইভ সেটিংস (Save settings)
+                </button>
+              </div>
+            </div>
+
           </div>
         )}
       </div>

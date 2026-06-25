@@ -1,1 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700;900&display=swap');
+@import url('https://fonts.maateen.me/kalpurush/font.css');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, "Roboto", "Kalpurush", sans-serif;
+}
+
+:root {
+  font-family: var(--font-sans);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-15px) translateX(10px);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+}
+
+@keyframes float-delayed {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(15px) translateX(-15px);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.15);
+  }
+}
+
+.bg-animate-glow-1 {
+  animation: float 12s ease-in-out infinite;
+}
+
+.bg-animate-glow-2 {
+  animation: float-delayed 16s ease-in-out infinite;
+}
+
+.bg-animate-pulse {
+  animation: pulse-glow 8s ease-in-out infinite;
+}

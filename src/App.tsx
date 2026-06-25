@@ -77,7 +77,23 @@ export default function App() {
       rewardBanner: true
     },
     priority: 'high',
-    dailyLimit: 25
+    dailyLimit: 25,
+    
+    // start.io defaults
+    startioAppId: '208395729',
+    startioBannerId: 'startio_banner_placement_1',
+    startioInterstitialId: 'startio_interstitial_placement_2',
+    startioRewardedId: 'startio_rewarded_placement_3',
+
+    // adsterra defaults
+    adsterraDirectLink: 'https://www.highratecpm.com/bk777adsterralink',
+    adsterraBannerCode: '<script type="text/javascript">\n\tatOptions = {\n\t\t\'key\' : \'adsterra_banner_key_300x50\',\n\t\t\'format\' : \'iframe\',\n\t\t\'height\' : 50,\n\t\t\'width\' : 320,\n\t\t\'params\' : {}\n\t};\n</script>',
+    adsterraPopunderCode: '<script type=\'text/javascript\' src=\'//pl2003892.highratecpm.com/a1/b2/c3/popunder.js\'></script>',
+
+    // monetag defaults
+    monetagZoneId: '8872935',
+    monetagDirectLink: 'https://monetagdirectlink.com/zone_8872935',
+    monetagPopunderCode: '<script src="https://alwingulla.com/act/monetag_popunder.js" data-zone="8872935" async></script>'
   });
 
   // Seed sample initial cash-out requests in the panel

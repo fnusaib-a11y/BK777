@@ -43,6 +43,22 @@ export interface AdSetting {
   };
   priority: 'high' | 'medium' | 'low';
   dailyLimit: number;
+  
+  // start.io settings
+  startioAppId?: string;
+  startioBannerId?: string;
+  startioInterstitialId?: string;
+  startioRewardedId?: string;
+
+  // adsterra settings
+  adsterraDirectLink?: string;
+  adsterraBannerCode?: string;
+  adsterraPopunderCode?: string;
+
+  // monetag settings
+  monetagZoneId?: string;
+  monetagDirectLink?: string;
+  monetagPopunderCode?: string;
 }
 
 export interface KYCData {
