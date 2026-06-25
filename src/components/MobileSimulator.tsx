@@ -61,6 +61,118 @@ interface MobileSimulatorProps {
   setConversionRate: (rate: number) => void;
 }
 
+
+// Reusable Ad Sandbox component to render live HTML/JS scripts (like Adsterra banners or Monetag widgets)
+function AdSandbox({ htmlCode, fallbackText, directLink, adBlockDetected }: { htmlCode?: string; fallbackText: string; directLink?: string; adBlockDetected?: boolean }) {
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  React.useEffect(() => {
+    if (!iframeRef.current || !htmlCode || adBlockDetected) return;
+    const iframe = iframeRef.current;
+    
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) return;
+
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <style>
+              body { 
+                margin: 0; 
+                padding: 0; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                overflow: hidden;
+                background-color: transparent;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              }
+            </style>
+          </head>
+          <body>
+            ${htmlCode}
+          </body>
+        </html>
+      `);
+      doc.close();
+    } catch (err) {
+      console.warn("Could not inject live ad script into sandbox iframe", err);
+    }
+  }, [htmlCode, adBlockDetected]);
+
+  // If there's an AdBlocker active or if no code is provided, render a gorgeous clickable visual banner fallback
+  if (adBlockDetected || !htmlCode || htmlCode.trim() === '') {
+    return (
+      <div 
+        onClick={() => {
+          if (directLink) {
+            window.open(directLink, '_blank');
+          }
+        }}
+        className="w-full py-2.5 px-3.5 flex items-center justify-between bg-gradient-to-r from-indigo-50 via-slate-50 to-indigo-50/60 hover:from-indigo-100/50 hover:to-indigo-50 border border-indigo-100 rounded-xl cursor-pointer select-none transition-all duration-300 shadow-sm"
+      >
+        <div className="flex items-center gap-2.5 overflow-hidden text-left">
+          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse flex-shrink-0">
+            SPONSOR
+          </div>
+          <div className="overflow-hidden">
+            <h4 className="text-slate-800 font-bold text-[11px] truncate leading-tight">
+              {fallbackText}
+            </h4>
+            <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5">
+              {directLink ? "ক্লিক করে স্পন্সর লিংক ভিজিট করুন এবং বোনাস আয় করুন!" : "Ad campaign is loaded and fully optimized!"}
+            </p>
+          </div>
+        </div>
+        
+        {directLink ? (
+          <div className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[9px] py-1 px-2.5 rounded-lg flex items-center gap-1 transition-all flex-shrink-0 shadow-sm uppercase tracking-wider">
+            Visit
+          </div>
+        ) : (
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full relative flex justify-center items-center overflow-hidden min-h-[58px]">
+      {/* Underlying fallback banner so if the iframe gets blocked mid-way or remains blank, there's always a beautiful clickable banner */}
+      <div 
+        onClick={() => {
+          if (directLink) {
+            window.open(directLink, '_blank');
+          }
+        }}
+        className="absolute inset-0 z-0 flex items-center justify-between px-3 bg-indigo-50/40 border border-indigo-100/30 rounded-xl cursor-pointer"
+      >
+        <div className="flex items-center gap-2">
+          <span className="bg-indigo-600 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded">AD</span>
+          <span className="text-[10px] text-slate-600 font-semibold">{fallbackText}</span>
+        </div>
+        <span className="text-[10px] text-indigo-600 font-bold underline">Visit</span>
+      </div>
+
+      {/* The real ad iframe */}
+      <div className="w-full z-10 relative bg-white">
+        <iframe
+          ref={iframeRef}
+          title="Live Ad Placement"
+          style={{ width: '100%', height: '58px', border: 'none', background: 'transparent' }}
+          sandbox="allow-scripts allow-popups allow-same-origin allow-forms"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function MobileSimulator({
   tasks,
   setTasks,
@@ -126,6 +238,35 @@ export default function MobileSimulator({
   const [watchAdTimes, setWatchAdTimes] = useState(0);
   const [adOverlayActive, setAdOverlayActive] = useState(false);
   const [adOverlayCountdown, setAdOverlayCountdown] = useState(5);
+  const [adBlockDetected, setAdBlockDetected] = useState(false);
+
+  useEffect(() => {
+    // Attempt to detect if an active AdBlocker is running on the client side
+    const checkAdBlock = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        
+        // Fetch an asset from a typical ad provider domain that gets heavily blocked by extension lists
+        await fetch('https://www.highperformanceformat.com/db9a9345c22e41579fa547b9bda6aa7e/invoke.js', {
+          method: 'HEAD',
+          mode: 'no-cors',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        setAdBlockDetected(false);
+      } catch (err) {
+        setAdBlockDetected(true);
+        console.warn("AdBlocker detected! Some third-party ad networks scripts may fail to load.");
+      }
+    };
+    
+    if (adSetting.isEnabled && adSetting.provider !== 'none') {
+      checkAdBlock();
+    } else {
+      setAdBlockDetected(false);
+    }
+  }, [adSetting.provider, adSetting.isEnabled]);
 
   // Custom visual alert / confirm modal dialog states
   const [customDialog, setCustomDialog] = useState<{
@@ -170,6 +311,49 @@ export default function MobileSimulator({
       addLog(`Timer Complete inside In-App Browser for "${selectedTask?.title}". Reward Claimable!`);
     }
   }, [showBrowser, browserTimer, browserClaimable, selectedTask, addLog]);
+
+  // Dynamic Live Popunder / Direct Script Injection
+  useEffect(() => {
+    if (!adSetting.isEnabled) return;
+
+    let divContainer: HTMLDivElement | null = null;
+    const code = adSetting.provider === 'adsterra' 
+      ? adSetting.adsterraPopunderCode 
+      : adSetting.provider === 'monetag' 
+      ? adSetting.monetagPopunderCode 
+      : null;
+
+    if (code && code.trim() !== '') {
+      addLog(`Injecting live ${adSetting.provider.toUpperCase()} Popunder script/html code onto the DOM...`);
+      
+      divContainer = document.createElement('div');
+      divContainer.id = "live-ad-popunder-container";
+      divContainer.style.display = 'none';
+      divContainer.innerHTML = code;
+      
+      // Extract any <script> tags from the parsed container and append them correctly so they execute
+      const scripts = divContainer.getElementsByTagName('script');
+      for (let i = 0; i < scripts.length; i++) {
+        const s = document.createElement('script');
+        // Copy attributes
+        for (let j = 0; j < scripts[i].attributes.length; j++) {
+          const attr = scripts[i].attributes[j];
+          s.setAttribute(attr.name, attr.value);
+        }
+        // Copy inline code
+        s.innerHTML = scripts[i].innerHTML;
+        document.body.appendChild(s);
+      }
+    }
+
+    return () => {
+      if (divContainer) {
+        try {
+          document.body.removeChild(divContainer);
+        } catch(e) {}
+      }
+    };
+  }, [adSetting.provider, adSetting.isEnabled, adSetting.adsterraPopunderCode, adSetting.monetagPopunderCode, addLog]);
 
   // Handle browser close anti cheat checking
   const handleCloseBrowser = () => {
@@ -576,45 +760,25 @@ export default function MobileSimulator({
 
         {/* Global Banner advertisement placement based on Admin Configurations */}
         {adSetting.isEnabled && adSetting.placementLimits.homeBanner && activeTab === 'home' && !selectedTask && !showBrowser && (
-          <div 
-            onClick={() => {
-              if (adSetting.provider === 'adsterra' && adSetting.adsterraDirectLink) {
-                window.open(adSetting.adsterraDirectLink, '_blank');
-                addLog('User clicked Adsterra Banner: Direct Link opened.');
-              } else if (adSetting.provider === 'monetag' && adSetting.monetagDirectLink) {
-                window.open(adSetting.monetagDirectLink, '_blank');
-                addLog('User clicked Monetag Banner: Smartlink opened.');
-              } else if (adSetting.provider === 'startio') {
-                addLog('User clicked Start.io Banner Ad.');
-              }
-            }}
-            className={`border-b text-[10px] font-bold py-2 px-3 flex justify-between items-center text-center cursor-pointer transition-all ${
-              adSetting.provider === 'startio' 
-                ? 'bg-amber-500/10 border-amber-500/20 text-slate-800 hover:bg-amber-500/15' 
-                : adSetting.provider === 'adsterra' 
-                ? 'bg-blue-600/10 border-blue-600/20 text-slate-800 hover:bg-blue-600/15'
-                : 'bg-rose-500/10 border-rose-500/20 text-slate-800 hover:bg-rose-500/15'
-            }`}
-          >
-            <div className="flex items-center gap-1.5 overflow-hidden">
-              <span className={`text-[8px] font-extrabold py-0.5 px-1 rounded select-none uppercase text-white ${
+          <div className="border-b border-gray-100 bg-white">
+            <AdSandbox 
+              adBlockDetected={adBlockDetected}
+              htmlCode={adSetting.provider === 'adsterra' ? adSetting.adsterraBannerCode : adSetting.provider === 'monetag' ? adSetting.monetagPopunderCode : undefined}
+              fallbackText={
                 adSetting.provider === 'startio' 
-                  ? 'bg-amber-600' 
+                  ? `Start.io Sponsor App ID: ${adSetting.startioAppId || adSetting.appId}` 
                   : adSetting.provider === 'adsterra' 
-                  ? 'bg-blue-600'
-                  : 'bg-rose-600'
-              }`}>
-                {adSetting.provider === 'startio' ? 'Start.io Ad' : adSetting.provider === 'adsterra' ? 'Adsterra Ad' : 'Monetag Ad'}
-              </span>
-              <span className="font-sans text-slate-700 truncate max-w-[200px]">
-                {adSetting.provider === 'startio' 
-                  ? `Start.io App ID: ${adSetting.startioAppId || adSetting.appId}` 
-                  : adSetting.provider === 'adsterra' 
-                  ? `Adsterra Direct Offer Active` 
-                  : `Monetag Placement Zone: ${adSetting.monetagZoneId || adSetting.appId}`}
-              </span>
-            </div>
-            <span className="text-[9px] underline text-indigo-600 font-bold">Visit</span>
+                  ? `Adsterra Premium Smartlink Offer` 
+                  : `Monetag Zone ID: ${adSetting.monetagZoneId || adSetting.appId}`
+              }
+              directLink={
+                adSetting.provider === 'adsterra' 
+                  ? adSetting.adsterraDirectLink 
+                  : adSetting.provider === 'monetag' 
+                  ? adSetting.monetagDirectLink 
+                  : undefined
+              }
+            />
           </div>
         )}
 
@@ -1493,6 +1657,19 @@ export default function MobileSimulator({
               {activeTab === 'home' && (
                 <div className="space-y-4">
                   
+                  {/* AdBlocker Warning Banner */}
+                  {adBlockDetected && adSetting.isEnabled && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 text-slate-800 shadow-sm animate-bounce-short">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-left">
+                        <h4 className="text-[11px] font-extrabold text-amber-800">এডব্লকার (AdBlocker) সনাক্ত হয়েছে!</h4>
+                        <p className="text-[9px] text-amber-700 leading-normal mt-0.5 font-medium">
+                          আপনার ব্রাউজার বা ডিভাইসে এডব্লকার (যেমন: uBlock Origin, AdBlock, বা Brave Shield) সক্রিয় রয়েছে। এর কারণে Monetag এবং Adsterra-এর আসল এড স্ক্রিপ্টগুলো লোড হতে পারছে না। রিয়েল এড দেখতে অনুগ্রহ করে এডব্লকারটি বন্ধ করে পেজ রিফ্রেশ করুন।
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Coin balances banner matches Screenshot 2 */}
                   <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden">
                     <div className="absolute -right-4 -bottom-4 bg-indigo-500/10 w-24 h-24 rounded-full"></div>
@@ -1544,15 +1721,25 @@ export default function MobileSimulator({
 
                   {/* AD: Native Ad placements between content */}
                   {adSetting.isEnabled && adSetting.placementLimits.taskListBanner && (
-                    <div className="bg-white border border-gray-200 p-2.5 rounded-xl shadow-inner flex items-center gap-3">
-                      <div className="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center font-bold text-indigo-700 text-xs text-center flex-shrink-0">
-                        {adSetting.provider.toUpperCase()}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-[10px] text-gray-400 font-bold">SPONSORED ADVERTISEMENT</p>
-                        <h4 className="text-xs font-bold text-slate-800 leading-normal">Boost WiFi Speeds 10x</h4>
-                      </div>
-                      <span className="p-1 text-[8px] bg-amber-500 text-slate-950 rounded font-semibold self-start tracking-wider uppercase">Promote</span>
+                    <div className="bg-white border border-gray-150 p-1 rounded-xl shadow-sm">
+                      <AdSandbox 
+                        adBlockDetected={adBlockDetected}
+                        htmlCode={adSetting.provider === 'adsterra' ? adSetting.adsterraBannerCode : adSetting.provider === 'monetag' ? adSetting.monetagPopunderCode : undefined}
+                        fallbackText={
+                          adSetting.provider === 'startio' 
+                            ? `Start.io App ID: ${adSetting.startioAppId || adSetting.appId}` 
+                            : adSetting.provider === 'adsterra' 
+                            ? `Adsterra Sponsored Reward Link` 
+                            : `Monetag Native Zone: ${adSetting.monetagZoneId || adSetting.appId}`
+                        }
+                        directLink={
+                          adSetting.provider === 'adsterra' 
+                            ? adSetting.adsterraDirectLink 
+                            : adSetting.provider === 'monetag' 
+                            ? adSetting.monetagDirectLink 
+                            : undefined
+                        }
+                      />
                     </div>
                   )}
 

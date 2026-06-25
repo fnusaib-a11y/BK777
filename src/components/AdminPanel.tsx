@@ -1432,6 +1432,7 @@ export default function AdminPanel({
                 <button
                   onClick={() => {
                     setAdSaveSuccess(true);
+                    setAdSetting(prev => ({ ...prev })); // Force reactivity update to write to Firestore
                     addLog(`MANUAL SYNC: Ad settings (Start.io, Adsterra, Monetag) synchronized to Google Firestore successfully.`);
                     setTimeout(() => setAdSaveSuccess(false), 4000);
                   }}
@@ -1440,6 +1441,85 @@ export default function AdminPanel({
                   <Save className="w-4 h-4" />
                   সেইভ সেটিংস (Save settings)
                 </button>
+              </div>
+            </div>
+
+            {/* Comprehensive Ad Troubleshooting & Code Insertion Guide */}
+            <div className="bg-gradient-to-br from-indigo-50/50 via-slate-50 to-amber-50/20 border border-slate-200 rounded-2xl p-6 mt-8 space-y-6">
+              <div className="border-b border-slate-200 pb-3">
+                <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 text-indigo-600" />
+                  এড সেটিংস ও কোড বসানোর পূর্ণাঙ্গ নির্দেশিকা (Ad Setup & Troubleshooting Guide)
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  আপনার এড নেটওয়ার্ক কোডগুলো কেন শো করছে না এবং কিভাবে সঠিক জায়গায় কোড বসাবেন তার সমাধান নিচে দেওয়া হলো:
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700 leading-relaxed">
+                
+                {/* Reason 1: AdBlocker */}
+                <div className="bg-white border border-gray-150 rounded-xl p-4.5 space-y-2 shadow-sm">
+                  <span className="p-1 px-2.5 text-[10px] font-extrabold bg-rose-50 text-rose-600 rounded-md uppercase tracking-wider">
+                    সমস্যা ১: এড-ব্লকার (AdBlocker / Brave Shield)
+                  </span>
+                  <p className="font-bold text-slate-800">এড শো না হওয়ার প্রধান কারণ:</p>
+                  <p>
+                    আপনার ব্রাউজারে যদি কোনো <strong>AdBlocker (যেমন: uBlock Origin, AdBlock Plus)</strong> অথবা <strong>Brave Browser-এর Shield</strong> চালু থাকে, তবে Adsterra, Monetag এবং Start.io-এর সমস্ত স্ক্রিপ্ট লোড হওয়া ব্লক করে দেওয়া হয়।
+                  </p>
+                  <p className="text-indigo-600 font-bold bg-indigo-50/50 p-2 rounded border border-indigo-100/50">
+                    💡 সমাধান: এড দেখার জন্য আপনার ব্রাউজার বা ডিভাইসের এড-ব্লকার সাময়িকভাবে বন্ধ (Pause/Disable) করুন এবং পেজটি রিফ্রেশ করুন।
+                  </p>
+                </div>
+
+                {/* Reason 2: Sandbox Environment */}
+                <div className="bg-white border border-gray-150 rounded-xl p-4.5 space-y-2 shadow-sm">
+                  <span className="p-1 px-2.5 text-[10px] font-extrabold bg-amber-50 text-amber-700 rounded-md uppercase tracking-wider">
+                    সমস্যা ২: আইফ্রেম স্যান্ডবক্স (Iframe Sandbox)
+                  </span>
+                  <p className="font-bold text-slate-800">কেন প্রিভিউতে পপআপ বা ডাইরেক্ট লিঙ্ক খোলে না?</p>
+                  <p>
+                    গুগল এআই স্টুডিওর এই প্রিভিউ উইন্ডোটি একটি অত্যন্ত সুরক্ষিত <strong>Iframe Sandbox</strong>-এর ভেতরে চলে। সিকিউরিটি পলিসির কারণে স্যান্ডবক্সের ভেতর এড নেটওয়ার্কের পপআপ বা ডাইরেক্ট রিডাইরেক্ট হওয়া ব্রাউজার আটকে দেয়।
+                  </p>
+                  <p className="text-amber-700 font-bold bg-amber-50/50 p-2 rounded border border-amber-100/50">
+                    💡 সমাধান: আসল এড ও পপআপ টেস্ট করার জন্য উপরের <span className="underline">Shared App URL</span> টি কপি করে একটি সম্পূর্ণ নতুন ট্যাব বা উইন্ডোতে ওপেন করুন।
+                  </p>
+                </div>
+
+                {/* Guide: Where to insert what */}
+                <div className="bg-white border border-gray-150 rounded-xl p-4.5 space-y-2 shadow-sm md:col-span-2">
+                  <span className="p-1 px-2.5 text-[10px] font-extrabold bg-emerald-50 text-emerald-700 rounded-md uppercase tracking-wider">
+                    কোথায় কোন কোড বসাবেন? (Which Code Goes Where?)
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <div className="border border-slate-100 p-3 rounded-lg bg-slate-50/30">
+                      <p className="font-bold text-slate-800 border-b pb-1 mb-1.5 text-[11px] text-amber-700">Start.io (স্টার্ট ডট আইও)</p>
+                      <ul className="list-disc pl-4 space-y-1 text-[11px]">
+                        <li><strong>Start.io App ID</strong>: আপনার একাউন্ট থেকে প্রাপ্ত শুধুমাত্র সংখ্যা দিয়ে গঠিত আইডিটি বসান (যেমন: <code className="font-mono bg-white p-0.5 border rounded">205240515</code>)।</li>
+                        <li>ব্যানার, ইন্টারস্টিশিয়াল ও রিওয়ার্ডেড পজিশনে আপনার Placement ID বসান।</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="border border-slate-100 p-3 rounded-lg bg-slate-50/30">
+                      <p className="font-bold text-slate-800 border-b pb-1 mb-1.5 text-[11px] text-[#1877f2]">Adsterra (এডস্টেরা)</p>
+                      <ul className="list-disc pl-4 space-y-1 text-[11px]">
+                        <li><strong>Direct Link URL</strong>: আপনার ডিরেক্ট লিঙ্কের পুরো লিঙ্কটি বসান (যেমন: <code className="font-mono bg-white p-0.5 border rounded">https://www.effectivecpm...</code>)।</li>
+                        <li><strong>Banner Code</strong>: ব্যানার উইজেট থেকে কপি করা সম্পূর্ণ <code className="font-mono bg-white p-0.5 border rounded">&lt;script&gt;</code> বা <code className="font-mono bg-white p-0.5 border rounded">&lt;iframe&gt;</code> কোডটি হুবহু বসান।</li>
+                        <li><strong>Popunder Code</strong>: Popunder কোডটি পেস্ট করুন। এটি ইউজারের ক্লিকের পর পপআপ ওপেন করবে।</li>
+                      </ul>
+                    </div>
+
+                    <div className="border border-slate-100 p-3 rounded-lg bg-slate-50/30">
+                      <p className="font-bold text-slate-800 border-b pb-1 mb-1.5 text-[11px] text-rose-600">Monetag (মনেট্যাগ)</p>
+                      <ul className="list-disc pl-4 space-y-1 text-[11px]">
+                        <li><strong>Zone ID / Tag ID</strong>: Monetag-এর ড্যাশবোর্ড থেকে প্রাপ্ত সংখ্যাবাচক জোন আইডি বসান (যেমন: <code className="font-mono bg-white p-0.5 border rounded">9903489</code>)।</li>
+                        <li><strong>Direct Smartlink URL</strong>: Monetag ডিরেক্ট লিঙ্ক বা স্মার্টলিঙ্কটি দিন।</li>
+                        <li><strong>Popunder Code</strong>: Monetag থেকে দেওয়া সম্পূর্ণ জাভাস্ক্রিপ্ট স্ক্রিপ্ট ট্যাগ কোডটি হুবহু পেস্ট করুন।</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
 

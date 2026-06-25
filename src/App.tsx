@@ -80,20 +80,20 @@ export default function App() {
     dailyLimit: 25,
     
     // start.io defaults
-    startioAppId: '208395729',
+    startioAppId: '205240515',
     startioBannerId: 'startio_banner_placement_1',
     startioInterstitialId: 'startio_interstitial_placement_2',
     startioRewardedId: 'startio_rewarded_placement_3',
 
     // adsterra defaults
-    adsterraDirectLink: 'https://www.highratecpm.com/bk777adsterralink',
-    adsterraBannerCode: '<script type="text/javascript">\n\tatOptions = {\n\t\t\'key\' : \'adsterra_banner_key_300x50\',\n\t\t\'format\' : \'iframe\',\n\t\t\'height\' : 50,\n\t\t\'width\' : 320,\n\t\t\'params\' : {}\n\t};\n</script>',
+    adsterraDirectLink: 'https://www.effectivecpmnetwork.com/ykis2r7v?key=2ba20330db2b29b6d80a7a5d2449bf96',
+    adsterraBannerCode: '<script type="text/javascript">\n\tatOptions = {\n\t\t\'key\' : \'2ba20330db2b29b6d80a7a5d2449bf96\',\n\t\t\'format\' : \'iframe\',\n\t\t\'height\' : 50,\n\t\t\'width\' : 320,\n\t\t\'params\' : {}\n\t};\n</script>',
     adsterraPopunderCode: '<script type=\'text/javascript\' src=\'//pl2003892.highratecpm.com/a1/b2/c3/popunder.js\'></script>',
 
     // monetag defaults
-    monetagZoneId: '8872935',
-    monetagDirectLink: 'https://monetagdirectlink.com/zone_8872935',
-    monetagPopunderCode: '<script src="https://alwingulla.com/act/monetag_popunder.js" data-zone="8872935" async></script>'
+    monetagZoneId: '9903489',
+    monetagDirectLink: 'https://omg10.com/4/9814946',
+    monetagPopunderCode: '<script src=\'//libtl.com/sdk.js\' data-zone=\'9903489\' data-sdk=\'show_9903489\'></script>'
   });
 
   // Seed sample initial cash-out requests in the panel
@@ -163,7 +163,22 @@ export default function App() {
         const adConfigRef = doc(db, 'settings', 'ads');
         const adSnap = await getDoc(adConfigRef);
         if (adSnap.exists()) {
-          setAdSetting(adSnap.data() as AdSetting);
+          let loadedAds = adSnap.data() as AdSetting;
+          // Auto-migrate if old dummy values or missing key properties are detected
+          if (loadedAds.startioAppId === '208395729' || loadedAds.adsterraDirectLink?.includes('highratecpm.com') || loadedAds.monetagZoneId === '8872935') {
+            loadedAds = {
+              ...loadedAds,
+              startioAppId: '205240515',
+              adsterraDirectLink: 'https://www.effectivecpmnetwork.com/ykis2r7v?key=2ba20330db2b29b6d80a7a5d2449bf96',
+              adsterraBannerCode: '<script type="text/javascript">\n\tatOptions = {\n\t\t\'key\' : \'2ba20330db2b29b6d80a7a5d2449bf96\',\n\t\t\'format\' : \'iframe\',\n\t\t\'height\' : 50,\n\t\t\'width\' : 320,\n\t\t\'params\' : {}\n\t};\n</script>',
+              monetagZoneId: '9903489',
+              monetagDirectLink: 'https://omg10.com/4/9814946',
+              monetagPopunderCode: '<script src=\'//libtl.com/sdk.js\' data-zone=\'9903489\' data-sdk=\'show_9903489\'></script>'
+            };
+            await setDoc(adConfigRef, loadedAds);
+            addLog('Firestore migration completed: Replaced default dummy IDs with user\'s real live credentials!');
+          }
+          setAdSetting(loadedAds);
           addLog('Remote Ad Settings initialized from database rules configuration.');
         } else {
           await setDoc(adConfigRef, adSetting);
