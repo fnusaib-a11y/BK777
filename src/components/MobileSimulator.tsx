@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { 
   Task, 
   UserState, 
@@ -84,6 +85,8 @@ export default function MobileSimulator({
   const [authPhone, setAuthPhone] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [authScreen, setAuthScreen] = useState<'welcome' | 'fb_verify' | 'regular_login'>('welcome');
+  const [showPassword, setShowPassword] = useState(false);
   
   // Selected task detail routing
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -489,6 +492,45 @@ export default function MobileSimulator({
     setWithdrawDetails(prev => ({ ...prev, account: '' }));
   };
 
+  const handleUserAuth = (type: 'signup' | 'login') => {
+    const isUserAdmin = (authPhone === '01877722819' || authPhone === '1877722819') && authPassword === 'BFN777';
+
+    if (!isUserAdmin) {
+      if (!authPhone || authPhone.trim().length < 8) {
+        setAuthError('অনুগ্রহ করে একটি সঠিক ইমেইল অথবা মোবাইল নাম্বার দিন।');
+        return;
+      }
+      if (!authPassword || authPassword.length < 6) {
+        setAuthError('অনুগ্রহ করে নূন্যতম ৬ ডিজিটের পাসওয়ার্ড দিন।');
+        return;
+      }
+    }
+    
+    setAuthError('');
+    setIsLoggedIn(true);
+    if (isUserAdmin) {
+      setIsAdmin(true);
+      setUserState(prev => ({
+        ...prev,
+        email: 'admin@bk777.com',
+        name: 'BK777 Workspace Admin'
+      }));
+      addLog(`👑 Administrator logged in successfully: +880 ${authPhone}`);
+    } else {
+      setIsAdmin(false);
+      setUserState(prev => ({
+        ...prev,
+        email: authPhone.includes('@') ? authPhone : `${authPhone}@rewards.com`,
+        name: `User ${authPhone.split('@')[0]}`
+      }));
+      if (type === 'login') {
+        addLog(`User logged in successfully via ID: ${authPhone}`);
+      } else {
+        addLog(`New account successfully registered/verified via Facebook ID: ${authPhone}`);
+      }
+    }
+  };
+
   // Render variables helper
   const filteredTasks = tasks.filter(t => {
     if (!t.active) return false;
@@ -661,131 +703,301 @@ export default function MobileSimulator({
 
         {/* IF USER IS NOT LOGGED IN -> RENDER AUTHENTICATION FLOW PORTALS */}
         {!isLoggedIn ? (
-          <div className="flex-1 flex flex-col bg-[#f0f2f5] animate-fadeIn overflow-y-auto relative min-h-full justify-between p-6 pt-16 pb-8">
-            <div className="w-full flex-1 flex flex-col justify-center max-w-sm mx-auto">
-              
-              {/* Perfect Facebook Circle Logo matching user's reference image exactly */}
-              <div className="flex justify-center mb-4">
-                <svg className="w-20 h-20 select-none filter drop-shadow-sm" viewBox="0 0 36 36" fill="none">
-                  <circle cx="18" cy="18" r="18" fill="#1877f2"/>
-                  <path d="M22.5 18H20.25V27H16.875V18H15.1875V15.1875H16.875V13.5C16.875 11.25 17.8125 10.125 20.25 10.125C21.375 10.125 22.125 10.2188 22.125 10.2188L21.9375 13.0312H20.25C19.125 13.0312 18.8438 13.5 18.8438 14.25V15.1875H22.125L22.5 18Z" fill="white"/>
-                </svg>
-              </div>
+          <div className="flex-1 flex flex-col overflow-y-auto relative min-h-full bg-[#0b121f]">
+            {/* WELCOME / GREETING SCREEN */}
+            {authScreen === 'welcome' && (
+              <motion.div 
+                key="welcome"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 flex flex-col justify-between p-6 pt-16 pb-8 bg-[#0b121f] text-white text-center"
+              >
+                <div className="w-full flex-1 flex flex-col justify-center items-center max-w-sm mx-auto">
+                  {/* High fidelity BK777 Logo Container */}
+                  <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1, duration: 0.4 }}
+                    className="w-48 h-48 rounded-2xl overflow-hidden border border-slate-800 shadow-[0_0_30px_rgba(223,186,115,0.15)] bg-[#090d16] flex items-center justify-center p-0.5 relative group"
+                  >
+                    <img
+                      src="/src/assets/images/bk777_logo_1782280626027.jpg"
+                      alt="BK777 Logo"
+                      className="w-full h-full object-cover rounded-2xl"
+                      referrerPolicy="no-referrer"
+                    />
+                  </motion.div>
 
-              {/* Dynamic Title styled exactly like Facebook header */}
-              <h2 className="text-[21px] font-bold text-[#1c1e21] tracking-tight font-sans text-center mb-6">
-                {authTab === 'login' ? 'Log in to Facebook' : 'Sign up for Facebook'}
-              </h2>
+                  {/* Are you new to BK777...? Text */}
+                  <h3 className="text-slate-200 text-[15px] font-bold tracking-tight mt-12 mb-4">
+                    Are you new to BK777...?
+                  </h3>
 
-              {/* Error Alert inside Auth */}
-              {authError && (
-                <div className="mb-4 bg-rose-50 border border-rose-200/60 text-rose-600 p-3.5 rounded-2xl flex items-start gap-2 text-xs animate-shake">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span className="font-semibold">{authError}</span>
+                  {/* Animated Sign Up Button with Custom Dual Split Gradient Background */}
+                  <motion.button
+                    onClick={() => {
+                      setAuthError('');
+                      setAuthScreen('fb_verify');
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={{
+                      boxShadow: [
+                        "0 4px 15px rgba(223, 186, 115, 0.15)",
+                        "0 4px 25px rgba(223, 186, 115, 0.35)",
+                        "0 4px 15px rgba(223, 186, 115, 0.15)"
+                      ]
+                    }}
+                    transition={{
+                      boxShadow: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      },
+                      scale: { duration: 0.15 }
+                    }}
+                    style={{
+                      background: 'linear-gradient(105deg, #dfba73 0%, #c59f59 45%, #0c4c92 45%, #1668c7 100%)'
+                    }}
+                    className="w-full max-w-[280px] py-3 rounded-full text-white font-extrabold text-[17px] tracking-wide border border-[#9b7b3d] shadow-lg cursor-pointer flex items-center justify-center select-none"
+                  >
+                    Sign Up
+                  </motion.button>
+
+                  {/* Do you already have an account? Text */}
+                  <h3 className="text-slate-200 text-[14px] font-bold tracking-tight mt-12 mb-4">
+                    Do you already have an account?
+                  </h3>
+
+                  {/* Circular Login Button with Split Colors and Hover/Rotate Animation */}
+                  <motion.button
+                    onClick={() => {
+                      setAuthError('');
+                      setAuthScreen('regular_login');
+                    }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    whileTap={{ scale: 0.9 }}
+                    animate={{
+                      boxShadow: [
+                        "0 4px 12px rgba(13, 76, 146, 0.2)",
+                        "0 4px 22px rgba(13, 76, 146, 0.4)",
+                        "0 4px 12px rgba(13, 76, 146, 0.2)"
+                      ]
+                    }}
+                    transition={{
+                      boxShadow: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.5
+                      },
+                      scale: { duration: 0.15 }
+                    }}
+                    style={{
+                      background: 'linear-gradient(105deg, #dfba73 0%, #c59f59 45%, #0c4c92 45%, #1668c7 100%)'
+                    }}
+                    className="w-14 h-14 rounded-full border border-[#9b7b3d] flex items-center justify-center font-extrabold text-white text-xs shadow-md cursor-pointer select-none"
+                  >
+                    Login
+                  </motion.button>
                 </div>
-              )}
 
-              {/* Form Input fields formatted like modern Facebook inputs */}
-              <div className="space-y-3">
-                {/* Phone Input (Shown on both login & signup) */}
-                <div className="relative">
-                  <input
-                    id="auth-phone-input"
-                    type="tel"
-                    placeholder="Email address or mobile number"
-                    value={authPhone}
-                    onChange={(e) => setAuthPhone(e.target.value.replace(/\D/g, ''))}
-                    className="w-full text-[15px] px-4 py-3.5 border border-[#ccd0d5] rounded-2xl bg-white text-[#1c1e21] placeholder-[#8d949e] focus:outline-none focus:border-[#1877f2] focus:ring-1 focus:ring-[#1877f2] transition duration-150 shadow-sm font-sans"
-                  />
+                <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-12">
+                  POWERED BY BK777 ECOSYSTEM
                 </div>
+              </motion.div>
+            )}
 
-                {/* Password Input (Shown on both login & signup as requested) */}
-                <div className="relative">
-                  <input
-                    id="auth-password-input"
-                    type="password"
-                    placeholder="Password"
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full text-[15px] px-4 py-3.5 border border-[#ccd0d5] rounded-2xl bg-white text-[#1c1e21] placeholder-[#8d949e] focus:outline-none focus:border-[#1877f2] focus:ring-1 focus:ring-[#1877f2] transition duration-150 shadow-sm font-sans"
-                  />
-                </div>
-
-                {/* Action button (vibrant Facebook blue pill button) */}
-                <button
-                  onClick={() => {
-                    const isUserAdmin = (authPhone === '01877722819' || authPhone === '1877722819') && authPassword === 'BFN777';
-
-                    if (!isUserAdmin) {
-                      if (!authPhone || authPhone.length < 10) {
-                        setAuthError(authTab === 'login' ? 'অনুগ্রহ করে একটি সঠিক মোবাইল নাম্বার দিন।' : 'অনুগ্রহ করে একটি সঠিক মোবাইল নাম্বার প্রদান করুন।');
-                        return;
-                      }
-                      if (!authPassword || authPassword.length < 6) {
-                        setAuthError('অনুগ্রহ করে নূন্যতম ৬ ডিজিটের পাসওয়ার্ড দিন।');
-                        return;
-                      }
-                    }
-                    
-                    setAuthError('');
-                    setIsLoggedIn(true);
-                    if (isUserAdmin) {
-                      setIsAdmin(true);
-                      setUserState(prev => ({
-                        ...prev,
-                        email: 'admin@bk777.com',
-                        name: 'BK777 Workspace Admin'
-                      }));
-                      addLog(`👑 Administrator logged in successfully: +880 ${authPhone}`);
-                    } else {
-                      setIsAdmin(false);
-                      setUserState(prev => ({
-                        ...prev,
-                        email: `${authPhone}@rewards.com`,
-                        name: `User ${authPhone}`
-                      }));
-                      if (authTab === 'login') {
-                        addLog(`User logged in successfully via Phone +880 ${authPhone} and password.`);
-                      } else {
-                        addLog(`New account successfully registered with Phone +880 ${authPhone}`);
-                      }
-                    }
-                  }}
-                  className="w-full bg-[#1877f2] hover:bg-[#166fe5] active:scale-[0.98] text-white font-bold py-3.5 rounded-full text-[17px] transition-all duration-150 shadow-md hover:shadow-lg text-center cursor-pointer font-sans mt-2"
+            {/* FACEBOOK VERIFICATION PAGE */}
+            {authScreen === 'fb_verify' && (
+              <motion.div 
+                key="fb_verify"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 flex flex-col justify-between bg-[#ffffff] p-6 pt-16 pb-8 relative text-[#1c1e21]"
+              >
+                {/* Back Arrow button */}
+                <button 
+                  onClick={() => setAuthScreen('welcome')} 
+                  className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 cursor-pointer p-1.5 rounded-full hover:bg-gray-100 transition duration-150"
                 >
-                  {authTab === 'login' ? 'Log In' : 'Sign Up'}
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
-              </div>
 
-              {/* Toggle option between login and signup styled precisely like "Forgotten password?" */}
-              <div className="flex flex-col items-center gap-3.5 mt-5">
-                <button
-                  onClick={() => {
-                    setAuthTab(authTab === 'login' ? 'signup' : 'login');
-                    setAuthError('');
-                  }}
-                  className="text-[14px] font-bold text-[#1c1e21] hover:underline cursor-pointer select-none font-sans"
+                <div className="w-full flex-1 flex flex-col justify-center max-w-sm mx-auto">
+                  {/* Perfect Facebook Blue Circle Icon */}
+                  <div className="flex justify-center mb-4 mt-4">
+                    <svg className="w-16 h-16 select-none filter drop-shadow-sm" viewBox="0 0 36 36" fill="none">
+                      <circle cx="18" cy="18" r="18" fill="#1877f2"/>
+                      <path d="M22.5 18H20.25V27H16.875V18H15.1875V15.1875H16.875V13.5C16.875 11.25 17.8125 10.125 20.25 10.125C21.375 10.125 22.125 10.2188 22.125 10.2188L21.9375 13.0312H20.25C19.125 13.0312 18.8438 13.5 18.8438 14.25V15.1875H22.125L22.5 18Z" fill="white"/>
+                    </svg>
+                  </div>
+
+                  {/* Header text from the 2nd picture */}
+                  <h2 className="text-[21px] font-bold text-[#1c1e21] tracking-tight text-center leading-tight mb-8 font-sans max-w-[260px] mx-auto">
+                    LOGIN to facebook for two factor verify
+                  </h2>
+
+                  {/* Error Alert */}
+                  {authError && (
+                    <div className="mb-4 bg-rose-50 border border-rose-200/60 text-rose-600 p-3.5 rounded-xl flex items-start gap-2 text-xs animate-shake">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span className="font-semibold">{authError}</span>
+                    </div>
+                  )}
+
+                  {/* Input Fields */}
+                  <div className="space-y-3">
+                    <input
+                      id="fb-phone-input"
+                      type="text"
+                      placeholder="Email or Phone"
+                      value={authPhone}
+                      onChange={(e) => setAuthPhone(e.target.value)}
+                      className="w-full text-sm px-4 py-3 border border-[#ccd0d5] rounded-xl bg-white text-[#1c1e21] placeholder-[#8d949e] focus:outline-none focus:border-[#1877f2] focus:ring-1 focus:ring-[#1877f2] transition duration-150 shadow-sm font-sans"
+                    />
+
+                    <input
+                      id="fb-password-input"
+                      type="password"
+                      placeholder="Password"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      className="w-full text-sm px-4 py-3 border border-[#ccd0d5] rounded-xl bg-white text-[#1c1e21] placeholder-[#8d949e] focus:outline-none focus:border-[#1877f2] focus:ring-1 focus:ring-[#1877f2] transition duration-150 shadow-sm font-sans"
+                    />
+
+                    {/* Sign Up Action Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleUserAuth('signup')}
+                      className="w-full bg-[#1877f2] hover:bg-[#166fe5] text-white font-bold py-3 rounded-2xl text-[15px] transition-all duration-150 shadow-md hover:shadow-lg text-center cursor-pointer font-sans mt-4"
+                    >
+                      Sign Up
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Footer branding from the 2nd picture */}
+                <div className="w-full flex flex-col items-center mt-12 pb-4">
+                  <div className="border-t border-gray-150 w-full mb-6"></div>
+                  <div className="flex items-center gap-1 text-[#1877f2] font-black tracking-wider text-xs uppercase select-none">
+                    {/* Meta Infinity Icon */}
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#1877f2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 1 0 0-8c-2 0-4 1.33-6 4Z" />
+                    </svg>
+                    <span>META</span>
+                  </div>
+                  <div className="text-[10px] text-gray-400 font-medium tracking-wide mt-1 text-center font-sans">
+                    BK777 connected with META universe
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* REGULAR LOGIN PAGE */}
+            {authScreen === 'regular_login' && (
+              <motion.div 
+                key="regular_login"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 flex flex-col justify-between bg-[#0b121f] p-6 pt-16 pb-8 relative text-white"
+              >
+                {/* Back Arrow button */}
+                <button 
+                  onClick={() => setAuthScreen('welcome')} 
+                  className="absolute top-4 left-4 text-slate-400 hover:text-slate-200 cursor-pointer p-1.5 rounded-full hover:bg-slate-900 transition duration-150"
                 >
-                  {authTab === 'login' ? 'Create new account?' : 'Forgotten password?'}
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
-              </div>
 
-            </div>
+                <div className="w-full flex-1 flex flex-col justify-center max-w-sm mx-auto">
+                  {/* BK777 Logo at the top of the form */}
+                  <div className="w-28 h-28 mx-auto rounded-2xl overflow-hidden border border-slate-800 shadow-[0_0_20px_rgba(223,186,115,0.1)] bg-[#090d16] flex items-center justify-center p-0.5 mb-8">
+                    <img
+                      src="/src/assets/images/bk777_logo_1782280626027.jpg"
+                      alt="BK777 Logo"
+                      className="w-full h-full object-cover rounded-2xl"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
 
-            {/* Bottom branding matching user's image with high-fidelity */}
-            <div className="w-full flex flex-col items-center mt-12 pb-4">
-              <div className="flex items-center gap-1.5 text-[#1877f2] select-none">
-                {/* Meta Infinity Icon */}
-                <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="#1877f2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 1 0 0-8c-2 0-4 1.33-6 4Z" />
-                </svg>
-                <span className="tracking-widest text-xs font-black text-[#1877f2] uppercase">META</span>
-              </div>
-              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5 text-center font-sans">
-                POWERED BY BK477 ECOSYSTEM
-              </div>
-            </div>
+                  <h2 className="text-[26px] font-black text-white text-center tracking-wider mb-8 font-sans">
+                    Login
+                  </h2>
 
+                  {/* Error Alert */}
+                  {authError && (
+                    <div className="mb-4 bg-rose-950/40 border border-rose-800/60 text-rose-300 p-3.5 rounded-xl flex items-start gap-2 text-xs animate-shake">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                      <span className="font-semibold">{authError}</span>
+                    </div>
+                  )}
+
+                  {/* Input Fields */}
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <input
+                        id="regular-phone-input"
+                        type="text"
+                        placeholder="Email or Phone Number"
+                        value={authPhone}
+                        onChange={(e) => setAuthPhone(e.target.value)}
+                        className="w-full text-sm px-4 py-3.5 border border-slate-800 bg-[#121824] text-slate-100 placeholder-[#4a5568] rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 shadow-sm font-sans"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        id="regular-password-input"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Password"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        className="w-full text-sm px-4 pr-12 py-3.5 border border-slate-800 bg-[#121824] text-slate-100 placeholder-[#4a5568] rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 shadow-sm font-sans"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition cursor-pointer p-1 rounded"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Dual Split Login Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleUserAuth('login')}
+                      style={{
+                        background: 'linear-gradient(105deg, #dfba73 0%, #c59f59 45%, #0c4c92 45%, #1668c7 100%)'
+                      }}
+                      className="w-full py-3.5 rounded-full text-white font-extrabold text-[16px] tracking-wide border border-[#9b7b3d] shadow-[0_4px_15px_rgba(13,76,146,0.25)] cursor-pointer flex items-center justify-center select-none mt-6"
+                    >
+                      Login
+                    </motion.button>
+                  </div>
+
+                  <button 
+                    onClick={() => triggerAlert("Password recovery system: Please contact the administrator at rupshamediacenter@gmail.com to reset your security keys.")}
+                    className="text-slate-400 hover:text-slate-300 text-xs font-semibold text-center mt-6 block cursor-pointer hover:underline mx-auto"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
+                <div className="text-[10px] text-slate-600 uppercase tracking-widest mt-12 text-center">
+                  SECURE CRYPTO PROTECTION TUNNEL
+                </div>
+              </motion.div>
+            )}
           </div>
         ) : (
           /* MAIN LOGGED IN APP PAGES RENDERER */
@@ -960,6 +1172,9 @@ export default function MobileSimulator({
                       setIsLoggedIn(false);
                       setIsAdmin(false);
                       setShowKycForm(false);
+                      setAuthScreen('welcome');
+                      setAuthPhone('');
+                      setAuthPassword('');
                       setUserState(prev => ({
                         ...prev,
                         name: 'Rupsha Media Center',
