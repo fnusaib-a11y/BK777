@@ -1,0 +1,8 @@
+{
+  "name": "BK777",
+  "description": "Comprehensive task-earning simulator representing both the Mobile client and Admin Web Panel with live sync, detailed KYC verification, ad network controls, and Flutter source codes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

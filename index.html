@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <script>
+      // Gracefully capture and suppress non-actionable cross-origin script errors in sandboxed iframes
+      window.addEventListener('error', function(event) {
+        if (event.message === 'Script error.' || !event.filename) {
+          event.preventDefault();
+          console.warn('Caught and suppressed sandboxed cross-origin Script error:', event);
+        }
+      }, true);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
